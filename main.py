@@ -3,7 +3,9 @@ from particle import Particle
 from simulation import Simulation
 from utils import Vector
 import config
-from visualizer import create_visualizer, visualize
+from visualizer import create_visualizer, visualize, save_simulation_gif
+from tqdm import tqdm
+import numpy as np
 
 
 def create_random_particles(num_particles):
@@ -45,10 +47,42 @@ def create_random_particles(num_particles):
     return particles
 
 
+def create_spiral_particles(num_particles):
+    """
+    Create a spiral-shaped distribution of particles.
+    """
+    particles = []
+    arms = 2  # Number of spiral arms
+    spread = 0.2  # Spread of the spiral
+    for i in range(num_particles):
+        angle = np.random.uniform(0, 2 * np.pi)
+        radius = np.random.normal(loc=0, scale=config.MAX_SIZE / 6)
+        arm_offset = (i % arms) * np.pi / arms
+        spiral_angle = angle + spread * radius + arm_offset
+        x = radius * np.cos(spiral_angle)
+        y = radius * np.sin(spiral_angle)
+        position = Vector(x, y)
+        # Tangential velocity for spiral motion
+        v_mag = 40 + np.random.uniform(-5, 5)
+        vx = -v_mag * np.sin(spiral_angle)
+        vy = v_mag * np.cos(spiral_angle)
+        velocity = Vector(vx, vy)
+        acceleration = Vector(0, 0)
+        mass = 1.0
+        particles.append(Particle(
+            id=i,
+            position=position,
+            velocity=velocity,
+            acceleration=acceleration,
+            mass=mass
+        ))
+    return particles
+
+
 def main():
     """Main simulation runner with visualization."""
-    # Create particles
-    particles = create_random_particles(config.NUM_PARTICLES)
+    # Create spiral particles
+    particles = create_spiral_particles(config.NUM_PARTICLES)
     
     # Create simulation
     sim = Simulation(particles, config.DT, config.THETA)
@@ -62,17 +96,14 @@ def main():
     
     print(f"Starting simulation with {len(particles)} particles...")
     
-    # Run simulation
-    try:
-        for step in range(1000):
-            sim.step()
-            if step % 10 == 0:
-                print(f"Step: {step}, Time: {sim.time:.2f}")
-                vis_callback(sim.particles, sim.time)
-    except KeyboardInterrupt:
-        print("Simulation interrupted by user.")
-    finally:
-        visualizer.show()
+    # Run simulation with progress bar
+    for step in tqdm(range(1000), desc="Simulation Progress"):
+        sim.step()
+        if step % 5 == 0:  # Visualize every 5 steps instead of 10
+            vis_callback(sim.particles, sim.time)
+    
+    # Save the simulation as a GIF (does not require ffmpeg)
+    save_simulation_gif(sim, filename="simulation.gif", num_steps=1000, interval=10)
 
 
 if __name__ == "__main__":
