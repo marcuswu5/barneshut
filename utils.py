@@ -1,9 +1,13 @@
 from dataclasses import dataclass
+from math import sqrt, pow
 
 @dataclass
 class Vector:
     x: float = 0.0
     y: float = 0.0
+
+    def magnitude(self):
+        return sqrt(pow(self.x,2) + pow(self.y,2))
 
 def vectorScale(v : Vector, c : float):
     return Vector(v.x * c, v.y * c)

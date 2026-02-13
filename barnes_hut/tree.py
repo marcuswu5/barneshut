@@ -1,7 +1,6 @@
-from curses.ascii import SI
-from node import Node, Boundary
-from particle import Particle
-from utils import Vector as V, getCenterOfMass
+from barnes_hut.node import Node, Boundary
+from particle import Particle, get_accel
+from utils import Vector as V, getCenterOfMass, vectorAdd, vectorScale
 import config
 
 SIZE = config.MAX_SIZE
@@ -53,3 +52,27 @@ class Tree:
             else:
                 raise Exception("Error creating tree: Particle outside of valid bounds")
 
+    def compute_acceleration(self, p : Particle, theta = config.THETA):
+        return compute_acceleration(self.root, p, theta)
+
+def compute_acceleration(node : Node, p : Particle, theta : float):
+    if not Node:
+        raise Exception("Error, accessed empty node while computing acceleration")
+    if len(node.children) == 0:
+        if node.particle:
+            return get_accel(p.position,p.mass,node.particle.position,node.particle.mass)
+        else:
+            return V()
+        
+    r = vectorAdd(node.center_of_mass, vectorScale(p.position,-1))
+    d = r.magnitude()
+    s = node.boundary.width
+
+    if s/d < config.THETA:
+        return get_accel(p.position,p.mass,node.center_of_mass, node.total_mass)
+    else:
+        a = V()
+        for child in node.children:
+            a = vectorAdd(a,compute_acceleration(child, p, theta))
+        return a
+    

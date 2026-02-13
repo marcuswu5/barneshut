@@ -2,3 +2,5 @@ MAX_SIZE = 100000.0
 G = 1.0
 DT = 0.01
 NUM_PARTICLES = 5000
+THETA = 0.7
+EPSILON = 10 #Softening Parameter
