@@ -1,0 +1,9 @@
+{
+    "augment.completions.enableAutomaticCompletions": false,
+    "augment.completions.enableQuickSuggestions": false,
+    "augment.nextEdit.enableBackgroundSuggestions": false,
+    "augment.nextEdit.enableAutoApply": true,
+    "augment.completions.enableChatInputCompletions": false,
+    "augment.enableEmptyFileHint": false,
+    "augment.conflictingCodingAssistantCheck": false
+}
