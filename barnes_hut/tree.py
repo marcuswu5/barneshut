@@ -7,43 +7,52 @@ SIZE = config.MAX_SIZE
 
 class Tree:
     def __init__(self) -> None:
-        self.root : Node = Node(V(), 0.0, Boundary(SIZE / 2,SIZE / 2,SIZE,SIZE))
+        self.root : Node = Node(V(), 0.0, Boundary(-SIZE / 2, -SIZE / 2, SIZE, SIZE))
 
     def split_node(self, p1 : Particle, p2 : Particle, n : Node):
         #p1 and p2 should be in bounds
-        xmid = (p1.position.x + p2.position.x) / 2
-        ymid = (p1.position.y + p2.position.y) / 2
         b = n.boundary
+        half_width = b.width / 2
+        half_height = b.height / 2
         for i in range(2):
             for j in range(2):
-                newBound = Boundary(b.x + xmid * i, b.y * ymid * j,b.width / 2, b.height / 2)
-                n.children.append(Node(V(),0.0,newBound))
+                newBound = Boundary(b.x + i * half_width, b.y + j * half_height, half_width, half_height)
+                n.children.append(Node(V(), 0.0, newBound))
 
     def insert_particle(self, p : Particle):
         cNode = self.root
+
+        if not cNode.boundary.inBounds(p.position):
+            return
         
         #Traverse the tree
         while len(cNode.children) > 0:
-            cNode.center_of_mass = getCenterOfMass(cNode.total_mass,cNode.center_of_mass,p.mass,p.position)
+            cNode.center_of_mass = getCenterOfMass(cNode.total_mass, cNode.center_of_mass, p.mass, p.position)
             cNode.total_mass += p.mass
 
+            found_child = False
             for child in cNode.children:
                 if child.boundary.inBounds(p.position):
                     cNode = child
+                    found_child = True
                     break
+            
+            if not found_child:
+                raise Exception(f"Particle at ({p.position.x}, {p.position.y}) not found in any child boundary")
         
         if not cNode.particle:
             cNode.particle = p
+            cNode.total_mass = p.mass
+            cNode.center_of_mass = p.position
         else:
-            self.split_node(cNode.particle,p,cNode)
-            for particle in [p,cNode.particle]:
+            old_particle = cNode.particle
+            self.split_node(old_particle, p, cNode)
+            cNode.particle = None
+            for particle in [old_particle, p]:
                 for child in cNode.children:
                     if child.boundary.inBounds(particle.position):
-                        cNode.center_of_mass = getCenterOfMass(cNode.total_mass,cNode.center_of_mass,particle.mass,particle.position)
-                        cNode.total_mass += p.mass
-                        cNode.particle = particle
-                    break
-            cNode.particle = None
+                        self.insert_particle(particle)
+                        break
     
     def create_tree(self, particles : list[Particle]):
         for particle in particles:
@@ -56,7 +65,7 @@ class Tree:
         return compute_acceleration(self.root, p, theta)
 
 def compute_acceleration(node : Node, p : Particle, theta : float):
-    if not Node:
+    if not node:
         raise Exception("Error, accessed empty node while computing acceleration")
     if len(node.children) == 0:
         if node.particle:

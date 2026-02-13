@@ -18,4 +18,4 @@ def vectorAdd(v1 : Vector, v2 : Vector):
 def getCenterOfMass(mass1 : float, coord1 : Vector, mass2 : float, coord2 : Vector):
     w1 = mass1 / (mass1 + mass2)
     w2 = mass2 / (mass1 + mass2)
-    return vectorAdd(vectorScale(coord1, w1),vectorScale(coord2, w2))
+    return Vector(w1 * coord1.x + w2 * coord2.x, w1 * coord1.y + w2 * coord2.y)

@@ -3,18 +3,18 @@ from particle import Particle
 import integrator
 import config
 from visualizer import visualize
+from tqdm import tqdm
 
 class Simulation:
     def __init__(self, particles, dt, theta = config.THETA) -> None:
-        self.tree : Tree
         self.particles : list[Particle] = particles
         self.time = 0.0
         self.dt = dt
         self.theta = theta
 
-    def update_accelerations(self):
-        for p in self.particles:
-            p.acceleration = self.tree.compute_acceleration(p,self.theta)
+    def update_accelerations(self,tree):
+        for p in tqdm(self.particles, desc="Computing accelerations", leave=False):
+            p.acceleration = tree.compute_acceleration(p, self.theta)
             
 
     def step(self):
@@ -26,9 +26,9 @@ class Simulation:
 
         #Rebuild Tree and compute accelerations
         tree = Tree()
-        for p in self.particles:
+        for p in tqdm(self.particles, desc="Building tree", leave=False):
             tree.insert_particle(p)
-        self.update_accelerations()
+        self.update_accelerations(tree)
 
 
         #Finish Kick
