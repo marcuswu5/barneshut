@@ -88,13 +88,12 @@ class ParticleVisualizer:
         # Extract current positions
         positions = np.array([(p.position.x, p.position.y) for p in particles])
         
-        # Color particles by speed
+        # Color particles by normalized speed (relative to map size)
         speeds = np.array([np.sqrt(p.velocity.x**2 + p.velocity.y**2) for p in particles])
-        speeds = np.clip(speeds, 0, np.max(speeds) if len(speeds) > 0 else 1)
-        
-        # Update scatter plot data only (don't redraw everything)
+        max_speed = self.max_size * 10000  # Extend range: treat map size per step as 'max' speed
+        norm_speeds = np.clip(speeds / max_speed, 0, 1)
         self.scatter.set_offsets(positions)
-        self.scatter.set_array(speeds)
+        self.scatter.set_array(norm_speeds)
         
         # Update text information only (do not recreate text objects)
         self.time_text.set_text(f'Time: {time:.2f}')

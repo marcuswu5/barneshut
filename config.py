@@ -1,6 +1,6 @@
-MAX_SIZE = 1000.0
-G = 10.0
+MAX_SIZE = 7000.0
+G = 9.0
 DT = 0.01
 NUM_PARTICLES = 100
 THETA = 0.7
-EPSILON = 10 #Softening Parameter
+EPSILON = 1000 #Softening Parameter

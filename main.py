@@ -26,15 +26,13 @@ def create_random_particles(num_particles):
         position = Vector(x, y)
         
         # Small random velocities
-        vx = random.uniform(-10, 10)
-        vy = random.uniform(-10, 10)
-        velocity = Vector(vx, vy)
+        velocity = Vector()
         
         # Initialize acceleration to zero
         acceleration = Vector(0, 0)
         
         # Random mass
-        mass = random.uniform(1, 10)
+        mass = random.uniform(100, 3000)
         
         particles.append(Particle(
             id=i,
@@ -68,7 +66,7 @@ def create_spiral_particles(num_particles):
         vy = v_mag * np.cos(spiral_angle)
         velocity = Vector(vx, vy)
         acceleration = Vector(0, 0)
-        mass = 1.0
+        mass = np.random.normal(1000,300)
         particles.append(Particle(
             id=i,
             position=position,
@@ -82,8 +80,12 @@ def create_spiral_particles(num_particles):
 def main():
     """Main simulation runner with visualization."""
     # Create spiral particles
-    particles = create_spiral_particles(config.NUM_PARTICLES)
-    
+    particles = create_random_particles(config.NUM_PARTICLES)
+
+    sun = Particle(0,Vector(),Vector(),Vector(),100000000)
+
+    particles.append(sun)
+
     # Create simulation
     sim = Simulation(particles, config.DT, config.THETA)
     
@@ -96,14 +98,17 @@ def main():
     
     print(f"Starting simulation with {len(particles)} particles...")
     
+    # Reset simulation time to zero before starting visualization
+    sim.time = 0.0
+
     # Run simulation with progress bar
-    for step in tqdm(range(1000), desc="Simulation Progress"):
+    for step in tqdm(range(100), desc="Simulation Progress"):
         sim.step()
         if step % 5 == 0:  # Visualize every 5 steps instead of 10
             vis_callback(sim.particles, sim.time)
     
     # Save the simulation as a GIF (does not require ffmpeg)
-    save_simulation_gif(sim, filename="simulation.gif", num_steps=100, interval=10)
+    save_simulation_gif(sim, filename="simulation.gif", num_steps=10, interval=1)
     visualizer.show()
 
 
