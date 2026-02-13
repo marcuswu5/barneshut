@@ -1,3 +1,28 @@
+def save_simulation_gif(simulation, filename="simulation.gif", num_steps=100, interval=50, dpi=150):
+    """
+    Save the simulation as a GIF using matplotlib's PillowWriter.
+    Args:
+        simulation: Simulation object (must have .particles, .step(), .time)
+        filename: Output GIF filename (e.g., 'simulation.gif')
+        num_steps: Number of simulation steps to record
+        interval: Delay between frames in ms
+        dpi: GIF resolution
+    """
+    from matplotlib.animation import PillowWriter
+    from tqdm import tqdm
+    visualizer = ParticleVisualizer()
+    fig = visualizer.fig
+    def update(frame):
+        simulation.step()
+        visualizer.update_frame(simulation.particles, simulation.time)
+        return visualizer.scatter, visualizer.time_text, visualizer.particle_count_text
+
+    writer = PillowWriter(fps=1000//interval)
+    # Wrap frames in tqdm for progress bar
+    anim = animation.FuncAnimation(fig, update, frames=tqdm(range(num_steps), desc="Saving GIF frames"), blit=False, interval=interval)
+    anim.save(filename, writer=writer, dpi=dpi)
+    print(f"GIF saved to {filename}")
+
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.patches import Circle
@@ -32,8 +57,8 @@ class ParticleVisualizer:
         
         # Initialize plot elements
         self.scatter = self.ax.scatter([], [], s=30, c='cyan', alpha=0.7, edgecolors='white', linewidth=0.5)
-        self.time_text = self.ax.text(0.02, 0.95, '', transform=self.ax.transAxes, 
-                                      fontsize=12, verticalalignment='top',
+        self.time_text = self.ax.text(0.98, 0.95, '', transform=self.ax.transAxes, 
+                                      fontsize=12, verticalalignment='top', horizontalalignment='right',
                                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
         self.particle_count_text = self.ax.text(0.02, 0.90, '', transform=self.ax.transAxes,
                                                fontsize=12, verticalalignment='top',
@@ -63,51 +88,17 @@ class ParticleVisualizer:
         # Extract current positions
         positions = np.array([(p.position.x, p.position.y) for p in particles])
         
-        # Update scatter plot
-        self.scatter.set_offsets(positions)
-        
-        # Color particles by speed for visual interest
+        # Color particles by speed
         speeds = np.array([np.sqrt(p.velocity.x**2 + p.velocity.y**2) for p in particles])
         speeds = np.clip(speeds, 0, np.max(speeds) if len(speeds) > 0 else 1)
+        
+        # Update scatter plot data only (don't redraw everything)
+        self.scatter.set_offsets(positions)
         self.scatter.set_array(speeds)
         
-        # Update text information
+        # Update text information only (do not recreate text objects)
         self.time_text.set_text(f'Time: {time:.2f}')
         self.particle_count_text.set_text(f'Particles: {len(particles)}')
-        
-        # Draw trails
-        self.ax.clear()
-        self.ax.set_xlim(-self.max_size / 2, self.max_size / 2)
-        self.ax.set_ylim(-self.max_size / 2, self.max_size / 2)
-        self.ax.set_aspect('equal')
-        self.ax.set_xlabel('X Position')
-        self.ax.set_ylabel('Y Position')
-        
-        # Draw particle trails
-        for p_id, trail in self.particle_trails.items():
-            if len(trail) > 1:
-                trail_array = np.array(list(trail))
-                self.ax.plot(trail_array[:, 0], trail_array[:, 1], 'cyan', alpha=0.3, linewidth=0.5)
-        
-        # Redraw scatter plot
-        self.scatter = self.ax.scatter(positions[:, 0], positions[:, 1], 
-                                      s=30, c=speeds, cmap='hot', alpha=0.7, 
-                                      edgecolors='white', linewidth=0.5)
-        
-        # Add colorbar for speed
-        if len(particles) > 0:
-            cbar = plt.colorbar(self.scatter, ax=self.ax, label='Speed')
-        
-        # Redraw text
-        self.time_text = self.ax.text(0.02, 0.95, f'Time: {time:.2f}', 
-                                      transform=self.ax.transAxes, fontsize=12,
-                                      verticalalignment='top',
-                                      bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        self.particle_count_text = self.ax.text(0.02, 0.90, f'Particles: {len(particles)}',
-                                               transform=self.ax.transAxes, fontsize=12,
-                                               verticalalignment='top',
-                                               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        
         self.fig.canvas.draw_idle()
     
     def show(self):
@@ -131,7 +122,7 @@ def visualize(particles, time, visualizer=None):
         visualizer = visualize.visualizer
     
     visualizer.update_frame(particles, time)
-    plt.pause(0.001)  # Small pause to allow rendering
+    plt.pause(0.1)  # Increased pause to 100ms to see animation clearly
 
 
 def create_visualizer(max_size=config.MAX_SIZE):

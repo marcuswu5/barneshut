@@ -103,7 +103,8 @@ def main():
             vis_callback(sim.particles, sim.time)
     
     # Save the simulation as a GIF (does not require ffmpeg)
-    save_simulation_gif(sim, filename="simulation.gif", num_steps=1000, interval=10)
+    save_simulation_gif(sim, filename="simulation.gif", num_steps=100, interval=10)
+    visualizer.show()
 
 
 if __name__ == "__main__":
